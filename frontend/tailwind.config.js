@@ -1,0 +1,45 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: ['./index.html', './src/**/*.{js,jsx}'],
+  theme: {
+    extend: {
+      colors: {
+        surface: 'var(--surface)',
+        ground: 'var(--ground)',
+        raise: 'var(--raise)',
+        line: 'var(--line)',
+        linesoft: 'var(--line-soft)',
+        ink: 'var(--ink)',
+        ink2: 'var(--ink-2)',
+        muted: 'var(--ink-muted)',
+        brand: 'var(--brand)',
+        brandstrong: 'var(--brand-strong)',
+        branddeep: 'var(--brand-deep)',
+        brandsoft: 'var(--brand-soft)',
+        gold: 'var(--gold)',
+        goldbright: 'var(--gold-bright)',
+        goldink: 'var(--gold-ink)',
+        goldsoft: 'var(--gold-soft)',
+        ok: 'var(--ok)',
+        warn: 'var(--warn)',
+        bad: 'var(--bad)',
+        nav: 'var(--nav)',
+        navink: 'var(--nav-ink)',
+        navink2: 'var(--nav-ink-2)',
+        navline: 'var(--nav-line)',
+        navhover: 'var(--nav-hover)',
+      },
+      fontFamily: {
+        display: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Source Sans 3"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        num: ['"IBM Plex Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+      },
+      borderRadius: { card: '10px' },
+      boxShadow: {
+        card: '0 1px 2px rgba(20,22,30,.05), 0 1px 10px rgba(20,22,30,.04)',
+        pop: '0 10px 30px rgba(20,22,30,.16)',
+      },
+    },
+  },
+  plugins: [],
+};

@@ -1,0 +1,222 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────
+   Token warna — identitas SINGA RISET BULELENG, versi cerah
+   merah maroon #a1121c · emas #ffc94a · permukaan putih tulang #faf8f4
+   Navbar & footer memakai token --nav* (merah maroon, teks putih),
+   senada dengan panel ajakan yang memakai --brand-deep.
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --surface: #faf8f4;
+  --ground: #f1ece3;
+  --raise: #ffffff;
+  --line: #e4ded2;
+  --line-soft: #efe9de;
+  --ink: #1b1815;
+  --ink-2: #4a453e;
+  --ink-muted: #7d766c;
+  --brand: #a1121c;
+  --brand-strong: #7f0d16;
+  --brand-deep: #a1121c;
+  --brand-soft: #fbeaeb;
+  --gold: #b07d0a;
+  --gold-bright: #ffc94a;
+  --gold-ink: #4a2d00;
+  --gold-soft: #fff6df;
+  --ok: #17915f;
+  --warn: #c08608;
+  --bad: #e23c22;
+  /* skala kepuasan (divergen: merah → toska) */
+  --s1: #b4231f;
+  --s2: #f2a13f;
+  --s3: #ded7ca;
+  --s4: #35b193;
+  --s5: #10786a;
+  --s1i: #ffffff;
+  --s2i: #3a2000;
+  --s3i: #1b1815;
+  --s4i: #ffffff;
+  --s5i: #ffffff;
+  --on-brand: #ffffff;
+  --grid: #ece6db;
+  --axis: #a09788;
+  /* navbar & footer */
+  --nav: #a1121c;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #f0ccd0;
+  --nav-line: #c23e46;
+  --nav-hover: #820d16;
+  --nav-active: #ffffff;
+  --nav-active-ink: #a1121c;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --surface: #16181d;
+    --ground: #0e1014;
+    --raise: #1e2128;
+    --line: #2c313a;
+    --line-soft: #23262e;
+    --ink: #eef0f5;
+    --ink-2: #c3c9d4;
+    --ink-muted: #8d94a2;
+    --brand: #ef929a;
+    --brand-strong: #f7b4ba;
+    --brand-deep: #7a0f17;
+    --brand-soft: #35191c;
+    --gold: #f0c765;
+    --gold-bright: #ffc94a;
+    --gold-ink: #3a2200;
+    --gold-soft: #3a2909;
+    --ok: #4ecb99;
+    --warn: #e5b74d;
+    --bad: #ff8168;
+    --s1: #d9564e;
+    --s2: #f0ad68;
+    --s3: #8b919c;
+    --s4: #4fc2a6;
+    --s5: #29a08a;
+    --s1i: #2a0b08;
+    --s2i: #3a2000;
+    --s3i: #0e1014;
+    --s4i: #07231c;
+    --s5i: #ffffff;
+    --on-brand: #2a0508;
+    --grid: #262a33;
+    --axis: #7e8695;
+    /* navbar & footer */
+    --nav: #7a0f17;
+    --nav-ink: #ffffff;
+    --nav-ink-2: #edc4c7;
+    --nav-line: #9c2b33;
+    --nav-hover: #640b12;
+    --nav-active: #f7e9ea;
+    --nav-active-ink: #7a0f17;
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --surface: #16181d;
+  --ground: #0e1014;
+  --raise: #1e2128;
+  --line: #2c313a;
+  --line-soft: #23262e;
+  --ink: #eef0f5;
+  --ink-2: #c3c9d4;
+  --ink-muted: #8d94a2;
+  --brand: #ef929a;
+  --brand-strong: #f7b4ba;
+  --brand-deep: #7a0f17;
+  --brand-soft: #35191c;
+  --gold: #f0c765;
+  --gold-bright: #ffc94a;
+  --gold-ink: #3a2200;
+  --gold-soft: #3a2909;
+  --ok: #4ecb99;
+  --warn: #e5b74d;
+  --bad: #ff8168;
+  --s1: #d9564e;
+  --s2: #f0ad68;
+  --s3: #8b919c;
+  --s4: #4fc2a6;
+  --s5: #29a08a;
+  --s1i: #2a0b08;
+  --s2i: #3a2000;
+  --s3i: #0e1014;
+  --s4i: #07231c;
+  --s5i: #ffffff;
+  --on-brand: #2a0508;
+  --grid: #262a33;
+  --axis: #7e8695;
+  /* navbar & footer */
+  --nav: #7a0f17;
+  --nav-ink: #ffffff;
+  --nav-ink-2: #edc4c7;
+  --nav-line: #9c2b33;
+  --nav-hover: #640b12;
+  --nav-active: #f7e9ea;
+  --nav-active-ink: #7a0f17;
+  color-scheme: dark;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--surface);
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    margin: 0;
+    color: var(--ink);
+    font-family: 'Source Sans 3', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    text-wrap: balance;
+  }
+  *:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--line);
+    border-radius: 99px;
+  }
+}
+
+@layer components {
+  .font-num {
+    font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow {
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .scroll-x {
+    overflow-x: auto;
+  }
+  /* Jangkar landing page: sisakan ruang untuk navbar yang sticky. */
+  .section-anchor {
+    scroll-margin-top: 92px;
+  }
+  .anim-rise {
+    animation: rise 0.45s cubic-bezier(0.22, 0.8, 0.3, 1) both;
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0.001;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
