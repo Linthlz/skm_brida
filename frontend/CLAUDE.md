@@ -1,7 +1,8 @@
 # Catatan untuk Claude Code
 
 Frontend SKM BRIDA Kabupaten Buleleng: React 18 + Vite + Tailwind 3 + React Router.
-JavaScript, bukan TypeScript. Backend-nya API Laravel di `../backend` (Sanctum mode SPA).
+JavaScript, bukan TypeScript. Backend-nya API Go Singa Riset di `../backend` (Fiber + PostgreSQL):
+endpoint SKM publik di `/api/v2/skm`, admin di `/api/v1/admin/skm`, login `/api/v1/auth/login` (JWT).
 
 ## Aturan yang berlaku di repo ini
 
@@ -41,8 +42,14 @@ JavaScript, bukan TypeScript. Backend-nya API Laravel di `../backend` (Sanctum m
    Galat 422 dipetakan ke field lewat `ex.field('nama_field')`.
 
 9. **Autentikasi** lewat `useAuth()`; rute admin dibungkus `RequireAuth` di `App.jsx`.
-   Jangan menyimpan token/sesi di storage. Menyembunyikan tombol hanyalah UX — aturan
-   akses ditegakkan backend.
+   Token JWT hanya dikelola `services/api/client.js` (`token`), jangan dibaca/ditulis di
+   komponen. Hanya role `admin` yang boleh masuk panel. Menyembunyikan tombol hanyalah
+   UX — aturan akses ditegakkan backend.
+
+10. **Format respons backend** `{ success, message, data, error, meta? }`. Galat validasi
+   datang sebagai 400 dengan `error: "field: pesan"` dan dinormalkan `client.js` menjadi
+   `ApiError` status 422. Meta paginasi (`page/limit/total_page`) diterjemahkan di
+   `services/api/admin.js` ke `current_page/last_page/per_page`.
 
 ## Domain
 

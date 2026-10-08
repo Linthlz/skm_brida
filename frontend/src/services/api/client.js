@@ -1,11 +1,17 @@
 /**
- * Klien HTTP tunggal untuk API Laravel. Autentikasi memakai Sanctum mode SPA:
- * sesi disimpan di cookie httpOnly, jadi tidak ada token yang disimpan di
- * browser. Untuk permintaan yang mengubah data, header X-XSRF-TOKEN diambil
- * dari cookie XSRF-TOKEN yang dipasang oleh /sanctum/csrf-cookie.
+ * Klien HTTP tunggal untuk API Go Singa Riset (Fiber). Autentikasi admin
+ * memakai JWT dari /v1/auth/login yang dikirim sebagai header
+ * `Authorization: Bearer`. Token disimpan di sessionStorage (atau
+ * localStorage bila "ingat saya" dicentang) karena backend tidak memakai
+ * cookie sesi.
+ *
+ * Bentuk respons backend: { success, status, ResponseCode, message, data, error, meta? }.
+ * Galat validasi dikirim sebagai 400 dengan `error` berbentuk "field: pesan";
+ * klien menormalkannya menjadi ApiError berstatus 422 dengan `errors[field]`
+ * agar halaman cukup memeriksa `ex.status === 422` dan `ex.field(nama)`.
  */
 const BASE = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
-const CSRF_URL = `${new URL(BASE || window.location.origin, window.location.origin).origin}/sanctum/csrf-cookie`;
+const KUNCI_TOKEN = 'skm_token';
 
 /** Galat API yang sudah dinormalisasi. status 0 = gagal terhubung. */
 export class ApiError extends Error {
@@ -23,16 +29,38 @@ export class ApiError extends Error {
 
 const PESAN_JARINGAN = 'Tidak dapat terhubung ke server. Periksa koneksi internet Anda lalu coba lagi.';
 
-function bacaCookie(nama) {
-  const m = document.cookie.match(new RegExp('(?:^|; )' + nama + '=([^;]*)'));
-  return m ? decodeURIComponent(m[1]) : null;
+function simpanan() {
+  try { return [window.sessionStorage, window.localStorage]; } catch { return []; }
 }
 
-export async function siapkanCsrf() {
+export const token = {
+  ambil() {
+    for (const s of simpanan()) {
+      try { const t = s.getItem(KUNCI_TOKEN); if (t) return t; } catch { /* storage diblokir */ }
+    }
+    return null;
+  },
+  simpan(nilai, ingat) {
+    token.hapus();
+    const [sesi, lokal] = simpanan();
+    try { (ingat ? lokal : sesi)?.setItem(KUNCI_TOKEN, nilai); } catch { /* storage diblokir */ }
+  },
+  hapus() {
+    for (const s of simpanan()) {
+      try { s.removeItem(KUNCI_TOKEN); } catch { /* storage diblokir */ }
+    }
+  },
+};
+
+/** Isi klaim JWT (tanpa verifikasi; verifikasi tetap di backend). */
+export function klaimToken() {
+  const t = token.ambil();
+  if (!t) return null;
   try {
-    await fetch(CSRF_URL, { credentials: 'include', headers: { Accept: 'application/json' } });
+    const isi = t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+    return JSON.parse(decodeURIComponent(escape(atob(isi))));
   } catch {
-    throw new ApiError(0, PESAN_JARINGAN);
+    return null;
   }
 }
 
@@ -44,41 +72,44 @@ function urlDengan(path, params) {
   return u.toString();
 }
 
-async function kirim(method, path, { params, body } = {}, sudahUlang = false) {
-  const ubah = method !== 'GET';
-  if (ubah && !bacaCookie('XSRF-TOKEN')) await siapkanCsrf();
-
-  const headers = { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' };
+async function kirim(method, path, { params, body } = {}) {
+  const headers = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
-  if (ubah) headers['X-XSRF-TOKEN'] = bacaCookie('XSRF-TOKEN') || '';
+  const t = token.ambil();
+  if (t) headers.Authorization = `Bearer ${t}`;
 
-  let res;
   try {
-    res = await fetch(urlDengan(path, params), {
-      method, headers, credentials: 'include',
+    return await fetch(urlDengan(path, params), {
+      method, headers,
       body: body !== undefined ? JSON.stringify(body) : undefined,
     });
   } catch {
     throw new ApiError(0, PESAN_JARINGAN);
   }
-
-  // Token CSRF kedaluwarsa: ambil ulang sekali lalu ulangi permintaan.
-  if (res.status === 419 && !sudahUlang) {
-    await siapkanCsrf();
-    return kirim(method, path, { params, body }, true);
-  }
-
-  return res;
 }
+
+const POLA_FIELD = /^([a-z_][\w.]*): (.+)$/s;
 
 async function json(res) {
   let isi = null;
   try { isi = await res.json(); } catch { /* respons tanpa body JSON */ }
   if (!res.ok) {
-    if (res.status === 401) window.dispatchEvent(new Event('skm:tidak-masuk'));
-    throw new ApiError(res.status, isi?.message || `Permintaan gagal (${res.status}).`, isi?.errors);
+    if (res.status === 401 && token.ambil()) {
+      token.hapus();
+      window.dispatchEvent(new Event('skm:tidak-masuk'));
+    }
+    const detail = typeof isi?.error === 'string' ? isi.error : '';
+    const cocok = detail.match(POLA_FIELD);
+    if (res.status === 400 && cocok) {
+      throw new ApiError(422, cocok[2], { [cocok[1]]: [cocok[2]] });
+    }
+    // Pesan dari kode SKM sendiri (403/409/400) ada di `error`; selain itu pakai `message`.
+    const pesan = [400, 403, 409].includes(res.status) && detail && detail !== 'internal server error'
+      ? detail : isi?.message;
+    throw new ApiError(res.status, pesan || `Permintaan gagal (${res.status}).`);
   }
-  return isi; // { success, message, data, meta? }
+  // `data` dihilangkan backend bila kosong (omitempty).
+  return { ...isi, data: isi?.data ?? null }; // { success, message, data, meta? }
 }
 
 export const api = {
@@ -88,13 +119,16 @@ export const api = {
   patch: (path, body) => kirim('PATCH', path, { body }).then(json),
   delete: (path) => kirim('DELETE', path).then(json),
 
-  /** Mengunduh berkas (ekspor laporan) lalu memicu dialog simpan di browser. */
-  async unduh(path, params) {
+  /**
+   * Mengunduh berkas (ekspor laporan) lalu memicu dialog simpan di browser.
+   * Content-Disposition tidak selalu terbaca lintas origin, jadi sediakan `namaCadangan`.
+   */
+  async unduh(path, params, namaCadangan = 'laporan') {
     const res = await kirim('GET', path, { params });
     if (!res.ok) await json(res);
     const blob = await res.blob();
     const cd = res.headers.get('Content-Disposition') || '';
-    const nama = (cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i) || [])[1] || 'laporan';
+    const nama = (cd.match(/filename\*?=(?:UTF-8'')?"?([^";]+)"?/i) || [])[1] || namaCadangan;
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = decodeURIComponent(nama);
