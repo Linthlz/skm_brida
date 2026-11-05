@@ -1,0 +1,3 @@
+ALTER TABLE researches
+DROP COLUMN IF EXISTS abstract,
+DROP COLUMN IF EXISTS description;

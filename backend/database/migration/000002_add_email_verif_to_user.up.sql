@@ -1,0 +1,5 @@
+ALTER TABLE users
+ADD COLUMN verified BOOLEAN NOT NULL DEFAULT FALSE,
+ADD COLUMN verification_token UUID UNIQUE,
+ADD COLUMN verification_expires_at TIMESTAMPTZ,
+ADD COLUMN verified_at TIMESTAMPTZ;

@@ -1,0 +1,5 @@
+DROP INDEX IF EXISTS idx_users_opd;
+
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_opd_fk;
+
+ALTER TABLE users DROP COLUMN IF EXISTS opd_internal_id;

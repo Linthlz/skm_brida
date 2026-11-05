@@ -1,0 +1,3 @@
+ALTER TABLE researches
+ADD COLUMN IF NOT EXISTS abstract TEXT,
+ADD COLUMN IF NOT EXISTS description TEXT;

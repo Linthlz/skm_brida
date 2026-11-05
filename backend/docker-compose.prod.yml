@@ -1,0 +1,62 @@
+# Produksi: image kecil tanpa source code, tanpa Air, file upload di volume.
+#   docker compose -f docker-compose.prod.yml up -d --build
+name: singariset-prod
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER di .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD di .env}
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB di .env}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  migrate:
+    image: migrate/migrate:v4.18.1
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./database/migration:/migrations:ro
+    command:
+      - "-path=/migrations"
+      - "-database=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable"
+      - "up"
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      target: prod
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}?sslmode=disable
+      PORT: "3000"
+      SEED_DEMO_PASSWORD: ""
+    ports:
+      # Hanya bisa diakses dari VPS itu sendiri; publik masuk lewat reverse proxy (Caddy/Nginx).
+      - "127.0.0.1:${BACKEND_HOST_PORT:-3000}:3000"
+    volumes:
+      - uploads:/app/public/storage
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/health >/dev/null || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  uploads:

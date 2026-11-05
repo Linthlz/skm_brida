@@ -1,0 +1,27 @@
+# Konfigurasi Air untuk container (dipakai oleh docker compose).
+# poll = true karena notifikasi perubahan file dari host Windows/macOS
+# tidak sampai ke dalam container lewat bind mount.
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main ."
+  entrypoint = ["./tmp/main"]
+  include_ext = ["go"]
+  include_file = [".env"]
+  exclude_dir = ["tmp", "public", "vendor"]
+  exclude_regex = ["_test\\.go"]
+  poll = true
+  poll_interval = 500
+  delay = 500
+  kill_delay = "1s"
+  stop_on_error = true
+
+[log]
+  time = true
+
+[misc]
+  clean_on_exit = true
+
+[screen]
+  clear_on_rebuild = false
